@@ -8,10 +8,14 @@
     "jquery": "~1.10.2",
     "sass-bootstrap": "~3.0.2",
     "angular-resource": "1.2.6",
-    "angular-route": "1.2.6"
+    "angular-route": "1.2.6",
+    "angularfire": "~0.6.0"
   },
   "devDependencies": {
     "angular-mocks": "1.2.6",
     "angular-scenario": "1.2.6"
+  },
+  "resolutions": {
+    "angular": "1.2.6"
   }
 }

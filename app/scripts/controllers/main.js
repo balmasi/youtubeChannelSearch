@@ -85,6 +85,10 @@ angular.module('youtubeApiApp')
 
         $scope.channels= null;
 
+        $scope.clear = function(){
+            $scope.channels = null;
+        };
+
         $scope.search = function(){
             gapi.client.youtube.search.list({
                 q: $scope.searchOptions.query,

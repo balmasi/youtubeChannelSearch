@@ -4,7 +4,8 @@ var app = angular.module('youtubeApiApp',[
     'ngResource',
     'ngRoute',
     'firebase',
-    'youtubeApiApp.services.channels'
+    'youtubeApiApp.services.channels',
+    'scroll'
   ]).config(function ($routeProvider) {
     $routeProvider
       .when('/', {

@@ -89,8 +89,8 @@ angular.module('youtubeApiApp')
 
             $scope.$apply(function(){
 
-              $scope.pagination.next = data.nextPageToken;
-              $scope.pagination.prev = data.prevPageToken;
+              pagination.next = data.nextPageToken;
+              pagination.prev = data.prevPageToken;
 
               data.items.forEach(function(v){
                 var id = v.id.channelId;
@@ -153,7 +153,27 @@ angular.module('youtubeApiApp')
       }
 
       /*
-      * Private variables (No need for scope access);
+      * Private Controller variables (No need for scope access);
+      * */
+      var pagination = {
+        next: null,
+        prev: null,
+        timesQueried: 0,
+        reset: function() {
+          this.next = null;
+          this.prev = null;
+          this.timesQueried = 0;
+        }
+      };
+
+      var settings = {
+        maxResultsPerQuery: 5,
+        minResults: 5,
+        maxTriesPerLoad: 10
+      }
+
+      /*
+      * Scope Variables
       * */
 
       $scope.loaded = false;
@@ -163,21 +183,10 @@ angular.module('youtubeApiApp')
       $scope.searchOptions = {
         query: null,
         order: $scope.uiOptions.order[0],
-        subscribers: null,
-        views: null,
-        fields: 'items(id,snippet),nextPageToken,prevPageToken,tokenPagination',
-        maxResultsPerQuery: 5,
-        minSearchResults: 5
+        fields: 'items(id,snippet),nextPageToken,prevPageToken,tokenPagination'
       };
 
-      $scope.pagination = {
-        next: null,
-        prev: null,
-        reset: function() {
-          this.next = null;
-          this.prev = null;
-        }
-      };
+
 
       $scope.channels= channelService.collection();
       $scope.deadChannels = channelService.deadCollection();
@@ -185,8 +194,12 @@ angular.module('youtubeApiApp')
 
       $scope.clear = function(){
         $scope.resultChannels = {};
-        $scope.pagination.reset();
+        pagination.reset();
       };
+
+      $scope.scrolled = function () {
+        console.log("scrolled");
+      }
 
 
       $scope.search = function(){
@@ -196,21 +209,24 @@ angular.module('youtubeApiApp')
           order: $scope.searchOptions.order,
           type: 'channel',
           fields: $scope.searchOptions.fields,
-          maxResults: $scope.searchOptions.maxResultsPerQuery
+          maxResults: settings.maxResultsPerQuery
         };
 
-        if ($scope.pagination.next !== null) {
-          params.pageToken = $scope.pagination.next;
+        if (pagination.next !== null) {
+          params.pageToken = pagination.next;
         }
 
         console.info("searching...");
+        pagination.timesQueried += 1;
         searchYoutube(params).then(
           function success(nextPageToken) {
             console.info("success");
+            // If there is a next page token and we haven't queried Youtube too many times
+            if (nextPageToken !== null && pagination.timesQueried < settings.maxTriesPerLoad){
+              var numResults = Object.keys($scope.resultChannels).length;
 
-            if (nextPageToken !== null){
-              $scope.pagination.next = nextPageToken;
-              if (Object.keys($scope.resultChannels).length < $scope.searchOptions.minSearchResults) {
+              if ( numResults < settings.minResults) {
+                pagination.next = nextPageToken;
                 $scope.search();
               }
             }

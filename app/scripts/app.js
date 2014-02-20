@@ -1,7 +1,11 @@
 'use strict';
 
-var app = angular.module('youtubeApiApp', ['ngResource', 'ngRoute'])
-  .config(function ($routeProvider) {
+var app = angular.module('youtubeApiApp',[
+    'ngResource',
+    'ngRoute',
+    'firebase',
+    'youtubeApiApp.services.channels'
+  ]).config(function ($routeProvider) {
     $routeProvider
       .when('/', {
         templateUrl: 'views/main.html',

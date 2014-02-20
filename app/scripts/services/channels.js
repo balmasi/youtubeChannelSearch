@@ -4,17 +4,20 @@
 'use strict';
 
 angular.module("youtubeApiApp.services.channels", ["youtubeApiApp.services.fireRef"])
-  .factory('channelService', ['angularFireCollection', 'FireRef',
-    function(angularFireCollection, FireRef) {
+  .factory('channelService', ['FireRef', "$firebase",
+    function(FireRef, $firebase) {
       return {
-        collection: function(cb) {
-          return angularFireCollection(FireRef.channels(),cb);
+        getRef: function() {
+          return FireRef.channels();
+        },
+        collection: function() {
+          return $firebase(FireRef.channels());
         }
         , find: function(channelId) {
           return FireRef.channels().child('/'+channelId);
         }
         , create: function(channel) {
-          return FireRef.leagues().push(channel);
+          return FireRef.channels().push(channel);
         }
         , removeChannel: function(channelId) {
           var channel = FireRef.channels().child('/'+channelId);

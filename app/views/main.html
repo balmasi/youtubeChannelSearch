@@ -1,5 +1,5 @@
 <div class="header">
-    <h3 class="text-muted">Youtube Channel Finder</h3>
+    <h3 class="text-muted">Youtube Channel Finder v0.2</h3>
 </div>
 <br/>
 
@@ -30,6 +30,7 @@
                     <th>Views</th>
                     <th>Subscribers</th>
                     <th>G+</th>
+                    <th>Email</th>
                 </tr>
             </thead>
             <tbody>
@@ -40,6 +41,7 @@
                     <td>{{c.numViews | number}}</td>
                     <td>{{c.numSubscribers | number}}</td>
                     <td><a data-ng-show="c.gPlus" href="https://plus.google.com/{{c.gPlus}}"><img src="images/googlePlus.jpg" alt="Google Plus"/></a></td>
+                    <td>{{c.email}}</td>
                 </tr>
             </tbody>
         </table>

@@ -64,93 +64,107 @@ angular.module('youtubeApiApp')
     };
 
   }])
-  .controller('MainCtrl', ['$scope', 'googleService', '$window', function ($scope, googleService, $window) {
+  .controller('MainCtrl', ['$scope', 'googleService', '$window', 'channelService',
+    function ($scope, googleService, $window, channelService) {
 
-    $scope.loaded = false;
-    $scope.options = {
-      order: ['relevance', 'date','rating','title','videoCount','viewCount']
-    }
-    $scope.searchOptions = {
-      query: null,
-      order: $scope.options.order[0],
-      subscribers: null,
-      views: null,
-      fields: 'items(id,snippet),nextPageToken,prevPageToken,tokenPagination'
-    };
+      function extractEmails(descr) {
+        return descr.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]{3,}\.[a-zA-Z0-9._-]{2,3})/gi);
+      }
 
-    $scope.pagination = {
-      next: null,
-      prev: null
-    };
+      $scope.loaded = false;
+      $scope.options = {
+        order: ['relevance', 'date','rating','title','videoCount','viewCount']
+      }
+      $scope.searchOptions = {
+        query: null,
+        order: $scope.options.order[0],
+        subscribers: null,
+        views: null,
+        fields: 'items(id,snippet),nextPageToken,prevPageToken,tokenPagination'
+      };
 
-    $scope.channels= null;
+      $scope.pagination = {
+        next: null,
+        prev: null
+      };
 
-    $scope.clear = function(){
-      $scope.channels = null;
-    };
+      $scope.channels= channelService.collection();
 
-    $scope.search = function(){
-      gapi.client.youtube.search.list({
-        q: $scope.searchOptions.query,
-        part: 'snippet',
-        order: $scope.searchOptions.order,
-        type: 'channel',
-        fields: $scope.searchOptions.fields
-      }).execute(function(data) {
-          $scope.$apply(function(){
-            $scope.pagination.next = data.nextPageToken;
-            $scope.pagination.prev = data.prevPageToken;
+      $scope.clear = function(){
+        //$scope.channels = null;
+      };
 
-            if (null === $scope.channels) $scope.channels = {};
+      $scope.search = function(){
+        gapi.client.youtube.search.list({
+          q: $scope.searchOptions.query,
+          part: 'snippet',
+          order: $scope.searchOptions.order,
+          type: 'channel',
+          fields: $scope.searchOptions.fields
+        }).execute(function(data) {
+            $scope.$apply(function(){
+              $scope.pagination.next = data.nextPageToken;
+              $scope.pagination.prev = data.prevPageToken;
 
-            data.items.forEach(function(v){
-              var id = v.id.channelId;
-              if (!$scope.channels[id]){
-                $scope.channels[id] = {
-                  description: v.snippet.description,
-                  channelTitle: v.snippet.channelTitle,
-                  title: v.snippet.title,
-                  image: v.snippet.thumbnails.default.url
-                };
-              }
+              if (null === $scope.channels) $scope.channels = {};
 
-              $scope.loadChannelInfo(id);
+              data.items.forEach(function(v){
+                var id = v.id.channelId;
+                if (!$scope.channels[id]){
+                  $scope.channels[id] = {
+                    description: v.snippet.description,
+                    channelTitle: v.snippet.channelTitle,
+                    title: v.snippet.title,
+                    image: v.snippet.thumbnails.default.url
+                  };
+
+                  $scope.channels.$add()
+                }
+
+                $scope.loadChannelInfo(id);
+              });
+              $scope.channels.$save();
             });
           });
-        });
-    };
+      };
 
-    $scope.loadChannelInfo = function(c) {
+      $scope.loadChannelInfo = function(c) {
 
-      gapi.client.youtube.channels.list({
-        id: c,
-        part: 'contentDetails,statistics, status',
-        fields: 'items(contentDetails,statistics,status)'
-      }).execute(function(data){
-          $scope.$apply(function() {
-            var ch = $scope.channels[c],
-              d  = data.items[0];
-            if (!angular.isUndefined(d.contentDetails.googlePlusUserId)){
-              ch.gPlus = d.contentDetails.googlePlusUserId;
-            }
-            ch.numSubscribers = d.statistics.subscriberCount;
-            ch.numViews = d.statistics.viewCount;
+        gapi.client.youtube.channels.list({
+          id: c,
+          part: 'contentDetails,statistics, status,snippet',
+          fields: 'items(contentDetails,statistics,status,snippet)'
+        }).execute(function(data){
+            $scope.$apply(function() {
+              var ch = $scope.channels[c],
+                d  = data.items[0];
+              if (!angular.isUndefined(d.contentDetails.googlePlusUserId)){
+                ch.gPlus = d.contentDetails.googlePlusUserId;
+              }
+              ch.numSubscribers = d.statistics.subscriberCount;
+              ch.numViews = d.statistics.viewCount;
+              debugger;
+              ch.description = d.snippet.description;
 
+              var emails = extractEmails(ch.description);
+              if ( emails && emails.length ) {
+                ch.email = emails;
+              }
+            });
           });
+      };
+
+
+      $window.handleClientLoad = function(){
+        googleService.handleClientLoad().then(function(msg){
+          $scope.loaded = true;
         });
-    };
+      }
 
+      /* INITIALIZE google API Javascript Library*/
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = 'https://apis.google.com/js/client.js?onload=handleClientLoad';
+      document.body.appendChild(script);
 
-    $window.handleClientLoad = function(){
-      googleService.handleClientLoad().then(function(msg){
-        $scope.loaded = true;
-      });
-    }
-
-    /* INITIALIZE google API Javascript Library*/
-    var script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = 'https://apis.google.com/js/client.js?onload=handleClientLoad';
-    document.body.appendChild(script);
-
-  }]);
+    }]);

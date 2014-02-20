@@ -4,6 +4,9 @@ angular.module('youtubeApiApp.services.fireRef',[])
       return {
         channels: function() {
           return new Firebase(FBURL+'/channels');
+        },
+        deadChannels: function() {
+          return new Firebase(FBURL+'/deadChannels');
         }
       };
     }]

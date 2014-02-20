@@ -89,6 +89,7 @@ angular.module('youtubeApiApp')
       };
 
       $scope.channels= channelService.collection();
+      $scope.deadChannels = channelService.deadCollection();
 
       $scope.clear = function(){
         //$scope.channels = null;
@@ -102,6 +103,8 @@ angular.module('youtubeApiApp')
           type: 'channel',
           fields: $scope.searchOptions.fields
         }).execute(function(data) {
+            var channel = null;
+
             $scope.$apply(function(){
               $scope.pagination.next = data.nextPageToken;
               $scope.pagination.prev = data.prevPageToken;
@@ -110,45 +113,48 @@ angular.module('youtubeApiApp')
 
               data.items.forEach(function(v){
                 var id = v.id.channelId;
-                if (!$scope.channels[id]){
-                  $scope.channels[id] = {
+                if (!$scope.channels[id] && !$scope.deadChannels[id]){
+                  channel = {
                     description: v.snippet.description,
                     channelTitle: v.snippet.channelTitle,
                     title: v.snippet.title,
                     image: v.snippet.thumbnails.default.url
                   };
-
-                  $scope.channels.$add()
+                  $scope.loadChannelInfo(channel, id);
                 }
-
-                $scope.loadChannelInfo(id);
               });
-              $scope.channels.$save();
             });
           });
       };
 
-      $scope.loadChannelInfo = function(c) {
+      $scope.loadChannelInfo = function(channel, cId) {
 
         gapi.client.youtube.channels.list({
-          id: c,
+          id: cId,
           part: 'contentDetails,statistics, status,snippet',
           fields: 'items(contentDetails,statistics,status,snippet)'
         }).execute(function(data){
             $scope.$apply(function() {
-              var ch = $scope.channels[c],
-                d  = data.items[0];
-              if (!angular.isUndefined(d.contentDetails.googlePlusUserId)){
-                ch.gPlus = d.contentDetails.googlePlusUserId;
-              }
-              ch.numSubscribers = d.statistics.subscriberCount;
-              ch.numViews = d.statistics.viewCount;
-              debugger;
-              ch.description = d.snippet.description;
+              var d  = data.items[0];
 
-              var emails = extractEmails(ch.description);
+              if (!angular.isUndefined(d.contentDetails.googlePlusUserId)){
+                channel.gPlus = d.contentDetails.googlePlusUserId;
+              }
+              channel.numSubscribers = d.statistics.subscriberCount;
+              channel.numViews = d.statistics.viewCount;
+              channel.description = d.snippet.description;
+
+              var emails = extractEmails(channel.description);
               if ( emails && emails.length ) {
-                ch.email = emails;
+                channel.email = emails;
+                $scope.channels[cId] = channel;
+                $scope.channels.$save(cId);
+              }
+              else {
+                $scope.deadChannels[cId] = {
+                  subscribers: channel.numSubscribers
+                };
+                $scope.deadChannels.$save(cId);
               }
             });
           });

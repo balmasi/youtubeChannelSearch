@@ -10,6 +10,14 @@ angular.module("youtubeApiApp.services.channels", ["youtubeApiApp.services.fireR
         getRef: function() {
           return FireRef.channels();
         },
+
+        deadCollection: function() {
+          return $firebase(FireRef.deadChannels());
+        },
+        deadFind: function(channelId) {
+          return FireRef.deadChannels().child('/'+channelId);
+        },
+
         collection: function() {
           return $firebase(FireRef.channels());
         }

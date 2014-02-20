@@ -37,7 +37,7 @@
                 <tr ng-repeat="(id, c) in channels">
                     <td><img class="channelImage" ng-src="{{c.image}}" alt="Channel Thumbnail"/></td>
                     <td><b>{{c.title}}</b></td>
-                    <td>{{c.description}}</td>
+                    <td>{{c.shortDescription}}</td>
                     <td>{{c.numViews | number}}</td>
                     <td>{{c.numSubscribers | number}}</td>
                     <td><a data-ng-show="c.gPlus" href="https://plus.google.com/{{c.gPlus}}"><img src="images/googlePlus.jpg" alt="Google Plus"/></a></td>

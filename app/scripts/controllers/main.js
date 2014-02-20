@@ -115,6 +115,7 @@ angular.module('youtubeApiApp')
                 var id = v.id.channelId;
                 if (!$scope.channels[id] && !$scope.deadChannels[id]){
                   channel = {
+                    shortDescription: v.snippet.description.slice(0,100),
                     description: v.snippet.description,
                     channelTitle: v.snippet.channelTitle,
                     title: v.snippet.title,

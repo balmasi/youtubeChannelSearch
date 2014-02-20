@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('youtubeApiApp', ['ngResource', 'ngRoute'])
+var app = angular.module('youtubeApiApp', ['ngResource', 'ngRoute'])
   .config(function ($routeProvider) {
     $routeProvider
       .when('/', {
@@ -10,5 +10,9 @@ angular.module('youtubeApiApp', ['ngResource', 'ngRoute'])
       .otherwise({
         redirectTo: '/'
       });
-  })
-  .constant('FBURL', 'https://yousearch.firebaseio.com/');
+  }).constant('FBURL', 'https://yousearch.firebaseio.com/');
+
+app.run(['FBURL', '$rootScope',
+  function(FBURL, $rootScope) {
+    $rootScope.FBURL = FBURL;
+  }]);

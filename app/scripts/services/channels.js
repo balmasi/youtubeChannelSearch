@@ -1,23 +1,9 @@
 /**
  * Created by balmasi on 19/02/14.
  */
-
-
-/**
- * Created by balmasi on 19/02/14.
- */
 'use strict';
 
-angular.module('youtubeApiApp.services', [])
-  .factory('FireRef', ['FBURL', 'Firebase',
-    function(FBURL, Firebase) {
-      return {
-        channels: function() {
-          return new Firebase(FBURL+'/channels');
-        }
-      };
-    }]
-  )
+angular.module("youtubeApiApp.services.channels", ["youtubeApiApp.services.fireRef"])
   .factory('channelService', ['angularFireCollection', 'FireRef',
     function(angularFireCollection, FireRef) {
       return {

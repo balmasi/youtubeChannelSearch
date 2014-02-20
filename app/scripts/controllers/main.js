@@ -1,7 +1,5 @@
 'use strict';
 
-var gapi = window.gapi;
-
 angular.module('youtubeApiApp')
   .service('googleService', ['$http', '$rootScope', '$q', function ($http, $rootScope, $q) {
     var clientId = '888692197820.apps.googleusercontent.com',

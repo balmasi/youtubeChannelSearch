@@ -90,9 +90,10 @@ angular.module('youtubeApiApp')
 
       $scope.channels= channelService.collection();
       $scope.deadChannels = channelService.deadCollection();
+      $scope.resultChannels = null;
 
       $scope.clear = function(){
-        //$scope.channels = null;
+        $scope.resultChannels = {};
       };
 
       $scope.search = function(){
@@ -113,9 +114,14 @@ angular.module('youtubeApiApp')
 
               data.items.forEach(function(v){
                 var id = v.id.channelId;
-                if (!$scope.channels[id] && !$scope.deadChannels[id]){
+                // If this channel is in database, dont hit Youtube
+                if ($scope.channels[id]) {
+                  $scope.resultChannels[id] = $scope.channels[id];
+                }
+                // Not in Database. If not a dead channel, hit Youtube
+                else if (!$scope.deadChannels[id]){
                   channel = {
-                    shortDescription: v.snippet.description.slice(0,100),
+                    shortDescription: v.snippet.description.slice(0,100)+"...",
                     description: v.snippet.description,
                     channelTitle: v.snippet.channelTitle,
                     title: v.snippet.title,

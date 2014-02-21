@@ -167,7 +167,7 @@ angular.module('youtubeApiApp')
       };
 
       var settings = {
-        maxResultsPerQuery: 5,
+        maxResultsPerQuery: 10,
         minResults: 5,
         maxTriesPerLoad: 10
       }
@@ -176,7 +176,7 @@ angular.module('youtubeApiApp')
       * Scope Variables
       * */
 
-      $scope.loaded = false;
+      $scope.loading = true;
       $scope.uiOptions = {
         order: ['relevance', 'date','rating','title','videoCount','viewCount']
       }
@@ -198,7 +198,7 @@ angular.module('youtubeApiApp')
       };
 
       $scope.scrolled = function () {
-        console.log("scrolled");
+        $scope.search();
       }
 
 
@@ -216,11 +216,10 @@ angular.module('youtubeApiApp')
           params.pageToken = pagination.next;
         }
 
-        console.info("searching...");
         pagination.timesQueried += 1;
+        $scope.loading = true;
         searchYoutube(params).then(
           function success(nextPageToken) {
-            console.info("success");
             // If there is a next page token and we haven't queried Youtube too many times
             if (nextPageToken !== null && pagination.timesQueried < settings.maxTriesPerLoad){
               var numResults = Object.keys($scope.resultChannels).length;
@@ -230,9 +229,12 @@ angular.module('youtubeApiApp')
                 $scope.search();
               }
             }
-
+            $scope.loading = false;
+          },
+          function failure(error) {
+            $scope.loading = false;
+            console.error(error.error);
           }
-
         );
 
       };
@@ -240,7 +242,7 @@ angular.module('youtubeApiApp')
 
       $window.handleClientLoad = function(){
         googleService.handleClientLoad().then(function(msg){
-          $scope.loaded = true;
+          $scope.loading = false;
         });
       }
 

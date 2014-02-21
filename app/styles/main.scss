@@ -2,6 +2,64 @@ $icon-font-path: "/bower_components/sass-bootstrap/fonts/";
 
 @import 'sass-bootstrap/lib/bootstrap';
 
+#logo{
+  width: 50px;
+  display:inline-block;
+
+  &+h3{
+    display:inline-block;
+    height: 50px;
+    vertical-align: text-top;
+    color: #333333;
+    margin: 0 20px 0 0;
+  }
+}
+#search {
+  display: inline-block;
+  min-width: 600px;
+}
+
+.header, .footer {
+  background: #F4F6DF;
+  z-index:2;
+  display:block;
+  position: fixed;
+  padding:5px 5px 5px 10px;
+  width: 100%;
+}
+.header{
+  height: 60px;
+  top: 0;
+  box-shadow: -10px 1px 10px rgba(0,0,0,0.8);
+}
+
+/* Custom page footer */
+.footer {
+  bottom: 0;
+  color: #777;
+  border-top: 1px solid #3c3c3c;
+  p {
+    margin:0;
+    display:inline;
+  }
+}
+
+#preloader {
+  left: 48%;
+  position: absolute;
+  height: 25px;
+  margin-top: -2px;
+}
+
+
+#wrapper {
+  margin-top:45px;
+}
+
+#results {
+  height: 100%;
+}
+
 .browsehappy {
   margin: 0.2em 0;
   background: #ccc;
@@ -9,27 +67,20 @@ $icon-font-path: "/bower_components/sass-bootstrap/fonts/";
   padding: 0.2em 0;
 }
 
-/* Space out content a bit */
-body {
-  padding-top: 20px;
-  padding-bottom: 20px;
+/* Override form control theme */
+.form-control:focus {
+  border-color: #ac2925;
+  outline: 0;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(197, 52, 36, 0.75);;
 }
-
-/* Custom page footer */
-.footer {
-  padding-left: 15px;
-  padding-right: 15px;
-  padding-top: 19px;
-  color: #777;
-  border-top: 1px solid #e5e5e5;
-}
-
 
 /* QUERY RESULTS */
 .channelImage{
   max-width:80px;
   max-height: 80px;
 }
+
+
 
 /* Responsive: Portrait tablets and up */
 @media screen and (min-width: 768px) {

@@ -1,15 +1,11 @@
 <div class="header">
-    <h3 class="text-muted">Youtube Channel Finder v0.2</h3>
-</div>
-<br/>
-
-<div id="wrapper" class="clearfix" when-scrolled="">
-
-    <form class="navbar-form" role="search" ng-submit="clear();search()">
+    <img src="images/logo.png" alt="logo" id="logo"/>
+    <h3 class="text-muted">FameFinder</h3>
+    <form class="navbar-form" id="search" role="search" ng-submit="clear();search()">
         <div class="form-group pull-left">
             <input type="text" class="form-control" data-ng-model="searchOptions.query" placeholder="Search">
         </div>
-        <button type="button" class="btn btn-primary" data-ng-click="search()">
+        <button type="button" class="btn btn-danger" data-ng-click="search()">
             <span class="glyphicon glyphicon-search"></span> Search
         </button>
 
@@ -19,8 +15,13 @@
 
         <input type="submit" class="hidden"/>
     </form>
+</div>
+<br/>
 
-    <section role="results">
+<div id="wrapper" class="clearfix">
+
+
+    <section id="results" role="results" scrollever="scrolled()">
         <table data-ng-show="resultChannels" class="table table-hover">
             <thead>
                 <tr>
@@ -50,4 +51,5 @@
 
 <div class="footer">
     <p>Made with ♥ and Coffee</p>
+    <img id="preloader" src="images/preloader.gif" alt="loading more results" data-ng-show="loading"/>
 </div>

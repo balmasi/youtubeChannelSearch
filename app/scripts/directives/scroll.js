@@ -4,19 +4,17 @@
 'use strict';
 
 angular.module('scroll',[])
-  .directive('when-scrolled', function() {
+  .directive('scrollever', function() {
     return {
       restrict: 'A',
       link:
         function(scope, elm, attr){
-//          var raw = elm[0];
-//
-//          elm.on('scroll', function() {
-//            if (raw.scrollTop + raw.offsetHeight >= raw.scrollHeight) {
-//              scope.$apply(attr.whenScrolled);
-//            }
-//          });
-          alert(elm);
+          $(document).on('scroll', function(e) {
+            var raw = document.body;
+            if (raw.scrollTop + $(window).height() >= raw.scrollHeight) {
+              scope.$apply(attr.scrollever);
+            }
+          });
         }
     };
   });

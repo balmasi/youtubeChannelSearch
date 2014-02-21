@@ -68,8 +68,8 @@ angular.module('youtubeApiApp')
     function ($scope, googleService, $window, channelService, $q) {
 
       /*
-      * Private Functions
-      * */
+       * Private Functions
+       * */
       function extractEmails(descr) {
         return descr.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]{3,}\.[a-zA-Z0-9._-]{2,3})/gi);
       }
@@ -91,15 +91,16 @@ angular.module('youtubeApiApp')
 
               pagination.next = data.nextPageToken;
               pagination.prev = data.prevPageToken;
+              pagination.numResults = data.pageInfo.totalResults;
 
               data.items.forEach(function(v){
                 var id = v.id.channelId;
                 // If this channel is in database, dont hit Youtube
-                if ($scope.channels[id]) {
-                  $scope.resultChannels[id] = $scope.channels[id];
+                if (liveChannels[id]) {
+                  $scope.resultChannels[id] = liveChannels[id];
                 }
                 // Not in Database. If not a dead channel, hit Youtube
-                else if (!$scope.deadChannels[id]){
+                else if (!deadChannels[id]){
                   channel = {
                     shortDescription: v.snippet.description.slice(0,100)+"...",
                     description: v.snippet.description,
@@ -138,62 +139,73 @@ angular.module('youtubeApiApp')
               var emails = extractEmails(channel.description);
               if ( emails && emails.length ) {
                 channel.email = emails;
-                $scope.channels[cId] = channel;
-                $scope.resultChannels[cId] = $scope.channels[cId];
-                $scope.channels.$save(cId);
+                liveChannels[cId] = channel;
+                $scope.resultChannels[cId] = liveChannels[cId];
+                liveChannels.$save(cId);
               }
               else {
-                $scope.deadChannels[cId] = {
+                deadChannels[cId] = {
                   subscribers: channel.numSubscribers
                 };
-                $scope.deadChannels.$save(cId);
+                deadChannels.$save(cId);
               }
             });
           });
       }
 
       /*
-      * Private Controller variables (No need for scope access);
-      * */
+       * Private Controller variables (No need for scope access);
+       * */
+
+      var liveChannels= channelService.collection(),
+        deadChannels = channelService.deadCollection();
+
       var pagination = {
         next: null,
         prev: null,
         timesQueried: 0,
+        numResults: 0,
         reset: function() {
           this.next = null;
           this.prev = null;
           this.timesQueried = 0;
+          this.numResults = 0;
         }
       };
 
       var settings = {
-        maxResultsPerQuery: 10,
-        minResults: 5,
-        maxTriesPerLoad: 10
+        // Minimum Number of results per round of calls to API
+        minResultsPerQuery: 10,
+        // Maximum number of times to call server before deciding to wait
+        maxTriesPerLoad: 10,
+        // Number of channels to ask for on each API call [0,50] inclusive
+        resultsPerRequest: 10
       }
 
       /*
-      * Scope Variables
-      * */
+       * Scope Variables
+       * */
 
       $scope.loading = true;
+      $scope.notEnoughResults = false;
       $scope.uiOptions = {
         order: ['relevance', 'date','rating','title','videoCount','viewCount']
-      }
+      };
+
       $scope.searchOptions = {
         query: null,
         order: $scope.uiOptions.order[0],
-        fields: 'items(id,snippet),nextPageToken,prevPageToken,tokenPagination'
+        fields: 'items(id,snippet),nextPageToken,prevPageToken,tokenPagination,pageInfo'
       };
 
-
-
-      $scope.channels= channelService.collection();
-      $scope.deadChannels = channelService.deadCollection();
-      $scope.resultChannels = null;
+      $scope.resultChannels = {};
+      $scope.hasResults = function() {
+        return !angular.equals($scope.resultChannels, {});
+      };
 
       $scope.clear = function(){
         $scope.resultChannels = {};
+        $scope.notEnoughResults = false;
         pagination.reset();
       };
 
@@ -209,7 +221,7 @@ angular.module('youtubeApiApp')
           order: $scope.searchOptions.order,
           type: 'channel',
           fields: $scope.searchOptions.fields,
-          maxResults: settings.maxResultsPerQuery
+          maxResults: settings.resultsPerRequest
         };
 
         if (pagination.next !== null) {
@@ -220,11 +232,17 @@ angular.module('youtubeApiApp')
         $scope.loading = true;
         searchYoutube(params).then(
           function success(nextPageToken) {
+
+            if ( pagination.numResults < 500 && (pagination.timesQueried ==1 || pagination.timesQueried >= 5)) {
+              alert("Not Enough Results. Try a better query.");
+              $scope.notEnoughResults = true;
+
+            }
             // If there is a next page token and we haven't queried Youtube too many times
-            if (nextPageToken !== null && pagination.timesQueried < settings.maxTriesPerLoad){
+            else if (nextPageToken !== null && pagination.timesQueried < settings.maxTriesPerLoad){
               var numResults = Object.keys($scope.resultChannels).length;
 
-              if ( numResults < settings.minResults) {
+              if ( numResults < settings.minResultsPerQuery) {
                 pagination.next = nextPageToken;
                 $scope.search();
               }
@@ -233,7 +251,7 @@ angular.module('youtubeApiApp')
           },
           function failure(error) {
             $scope.loading = false;
-            console.error(error.error);
+            console.error(error);
           }
         );
 

@@ -14,14 +14,14 @@
         </button>
 
         <div class="col-xs-3">
-            <select ng-model="searchOptions.order"  ng-options="o for o in options.order track by o" class="form-control"></select>
+            <select ng-model="searchOptions.order"  ng-options="o for o in uiOptions.order track by o" class="form-control"></select>
         </div>
 
         <input type="submit" class="hidden"/>
     </form>
 
     <section role="results">
-        <table data-ng-show= "channels" class="table table-hover">
+        <table data-ng-show="resultChannels" class="table table-hover">
             <thead>
                 <tr>
                     <th>Image</th>

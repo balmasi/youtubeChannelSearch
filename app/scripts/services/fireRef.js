@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('youtubeApiApp.services.fireRef',[])
   .factory('FireRef', ['FBURL', 'Firebase',
     function(FBURL, Firebase) {

@@ -64,53 +64,33 @@ angular.module('youtubeApiApp')
     };
 
   }])
-  .controller('MainCtrl', ['$scope', 'googleService', '$window', 'channelService',
-    function ($scope, googleService, $window, channelService) {
+  .controller('MainCtrl', ['$scope', 'googleService', '$window', 'channelService', '$q',
+    function ($scope, googleService, $window, channelService, $q) {
 
+      /*
+      * Private Functions
+      * */
       function extractEmails(descr) {
         return descr.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]{3,}\.[a-zA-Z0-9._-]{2,3})/gi);
       }
 
-      $scope.loaded = false;
-      $scope.options = {
-        order: ['relevance', 'date','rating','title','videoCount','viewCount']
-      }
-      $scope.searchOptions = {
-        query: null,
-        order: $scope.options.order[0],
-        subscribers: null,
-        views: null,
-        fields: 'items(id,snippet),nextPageToken,prevPageToken,tokenPagination'
-      };
+      function searchYoutube(params) {
+        var deferred = $q.defer();
 
-      $scope.pagination = {
-        next: null,
-        prev: null
-      };
-
-      $scope.channels= channelService.collection();
-      $scope.deadChannels = channelService.deadCollection();
-      $scope.resultChannels = null;
-
-      $scope.clear = function(){
-        $scope.resultChannels = {};
-      };
-
-      $scope.search = function(){
-        gapi.client.youtube.search.list({
-          q: $scope.searchOptions.query,
-          part: 'snippet',
-          order: $scope.searchOptions.order,
-          type: 'channel',
-          fields: $scope.searchOptions.fields
-        }).execute(function(data) {
+        gapi.client.youtube.search.list(params).execute(
+          function(data) {
             var channel = null;
 
+            // Check for any errors
+            if  ( angular.isDefined(data.error) ) {
+              deferred.reject(data.error);
+              return;
+            }
+
             $scope.$apply(function(){
+
               $scope.pagination.next = data.nextPageToken;
               $scope.pagination.prev = data.prevPageToken;
-
-              if (null === $scope.channels) $scope.channels = {};
 
               data.items.forEach(function(v){
                 var id = v.id.channelId;
@@ -127,15 +107,19 @@ angular.module('youtubeApiApp')
                     title: v.snippet.title,
                     image: v.snippet.thumbnails.default.url
                   };
-                  $scope.loadChannelInfo(channel, id);
+                  loadChannelInfo(channel, id);
                 }
               });
             });
-          });
-      };
 
-      $scope.loadChannelInfo = function(channel, cId) {
+            deferred.resolve(data.nextPageToken || null);
+          }
+        );
 
+        return deferred.promise;
+      }
+
+      function loadChannelInfo(channel, cId) {
         gapi.client.youtube.channels.list({
           id: cId,
           part: 'contentDetails,statistics, status,snippet',
@@ -155,6 +139,7 @@ angular.module('youtubeApiApp')
               if ( emails && emails.length ) {
                 channel.email = emails;
                 $scope.channels[cId] = channel;
+                $scope.resultChannels[cId] = $scope.channels[cId];
                 $scope.channels.$save(cId);
               }
               else {
@@ -165,6 +150,75 @@ angular.module('youtubeApiApp')
               }
             });
           });
+      }
+
+      /*
+      * Private variables (No need for scope access);
+      * */
+
+      $scope.loaded = false;
+      $scope.uiOptions = {
+        order: ['relevance', 'date','rating','title','videoCount','viewCount']
+      }
+      $scope.searchOptions = {
+        query: null,
+        order: $scope.uiOptions.order[0],
+        subscribers: null,
+        views: null,
+        fields: 'items(id,snippet),nextPageToken,prevPageToken,tokenPagination',
+        maxResultsPerQuery: 5,
+        minSearchResults: 5
+      };
+
+      $scope.pagination = {
+        next: null,
+        prev: null,
+        reset: function() {
+          this.next = null;
+          this.prev = null;
+        }
+      };
+
+      $scope.channels= channelService.collection();
+      $scope.deadChannels = channelService.deadCollection();
+      $scope.resultChannels = null;
+
+      $scope.clear = function(){
+        $scope.resultChannels = {};
+        $scope.pagination.reset();
+      };
+
+
+      $scope.search = function(){
+        var params = {
+          q: $scope.searchOptions.query,
+          part: 'snippet',
+          order: $scope.searchOptions.order,
+          type: 'channel',
+          fields: $scope.searchOptions.fields,
+          maxResults: $scope.searchOptions.maxResultsPerQuery
+        };
+
+        if ($scope.pagination.next !== null) {
+          params.pageToken = $scope.pagination.next;
+        }
+
+        console.info("searching...");
+        searchYoutube(params).then(
+          function success(nextPageToken) {
+            console.info("success");
+
+            if (nextPageToken !== null){
+              $scope.pagination.next = nextPageToken;
+              if (Object.keys($scope.resultChannels).length < $scope.searchOptions.minSearchResults) {
+                $scope.search();
+              }
+            }
+
+          }
+
+        );
+
       };
 
 
